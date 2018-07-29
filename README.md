@@ -50,6 +50,41 @@ Then they are fitted to a third order polynomial
 ```
 auto coeffs = polyfit(ptsx_transform, ptsy_transform, 3);
 ```
+
+## Model Predictive Control with Latency
+
+To deal with the latency of actuation, a small delay is implemented to predict the system state after the latency, which is new initail state for MPC. The prediction of new state after latency is implemented as followed:
+
+```
+/* Actuator delay in milliseconds.*/
+const int actuatorDelay = 100;
+
+/* Actuator delay in seconds.*/
+const double delay = actuatorDelay / 1000.0;
+		  
+/* Initial state.*/
+const double x0 = 0;
+const double y0 = 0;
+const double psi0 = 0;
+const double cte0 = coeffs[0];
+const double epsi0 = -atan(coeffs[1]);
+
+/* State after delay.*/
+double x_delay = x0 + ( v * cos(psi0) * delay );
+double y_delay = y0 + ( v * sin(psi0) * delay );
+double psi_delay = psi0 - ( v * delta * delay / mpc.Lf );
+double v_delay = v + a * delay;
+double cte_delay = cte0 + ( v * sin(epsi0) * delay );
+double epsi_delay = epsi0 - ( v * atan(coeffs[1]) * delay / mpc.Lf );
+
+/* Define the state vector.*/
+Eigen::VectorXd state(6);
+state << x_delay, y_delay, psi_delay, v_delay, cte_delay, epsi_delay;
+```
+
+
+
+
  
   
  
