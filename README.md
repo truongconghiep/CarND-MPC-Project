@@ -27,7 +27,47 @@ The model predictive control optimizes control inputs [delta, a] regarding to co
  
 ## Timestep Length and Elapsed Duration
 
-Number of timesteps N and elapsed time dt determine the prediction horizon. The number of timesteps have a big impact on the stability of the controller. With a number of timesteps smaller than 5, the controller is completely oscillating. The same result was also observed with a number of timesteps bigger than 15. One more thing was observed during tuning N is that the car acceleration is increasing when the number of timesteps increases. After trying with N in range from 5 to 15 and timestep in range from 50 to 100 milliseconds, I choose 10 timesteps and 100 ms steptime to have a good stability of the controller.
+Number of timesteps N and elapsed time dt determine the prediction horizon. The number of timesteps have a big impact on the stability of the controller. With a number of timesteps smaller than 5, the controller is completely oscillating. The same result was also observed with a number of timesteps bigger than 15. One more thing was observed during tuning N is that the car acceleration is increasing when the number of timesteps increases. After trying with N in range from 5 to 15 and timestep in range from 50 to 100 milliseconds, I choose 15 timesteps and 100 ms steptime to have a good stability of the controller.
+
+The timestep dt affects quite a lot on the system. The smaller dt, the better system response but then it requires a bigger number of timesteps, which requires higher computational ability. Since the latency of the system is 100 ms, the minimum timestep should not below this boundary.
+
+To keep the controller stable, following cost weights are introduced in the cost function.
+
+```
+/* MPC cost weights */
+#define CTE_COST_WEIGHT                 (double)2000
+#define EPSI_COST_WEIGHT                (double)2000
+#define DELTA_COST_WEIGHT_PROPORTIONAL  (double)30
+#define A_COST_WEIGHT_PROPORTIONAL      (double)30
+#define DELTA_COST_WEIGHT_DIFFERENT     (double)4000000
+#define A_COST_WEIGHT_DIFFERENT         (double)20000
+```
+
+Cost function:
+
+```
+/* The part of the cost based on the reference state.*/
+for (unsigned int t = 0; t < N; t++) 
+{
+  fg[0] += CTE_COST_WEIGHT * CppAD::pow(vars[cte_start + t] - ref_cte, 2);
+  fg[0] += EPSI_COST_WEIGHT * CppAD::pow(vars[epsi_start + t] - ref_epsi, 2);
+  fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
+}
+/* Minimize the use of actuators.*/
+for (unsigned int t = 0; t < N - 1; t++) 
+{
+  fg[0] += DELTA_COST_WEIGHT_PROPORTIONAL * CppAD::pow(vars[delta_start + t], 2);
+  fg[0] += A_COST_WEIGHT_PROPORTIONAL * CppAD::pow(vars[a_start + t], 2);
+}
+
+/* Minimize the value gap between sequential actuations.*/
+for (unsigned  int t = 0; t < N - 2; t++) 
+{
+  fg[0] += DELTA_COST_WEIGHT_DIFFERENT * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+  fg[0] += A_COST_WEIGHT_DIFFERENT * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+}
+```
+
 
 ## Polynomial Fitting and MPC Preprocessing
 The waypoints provided by the simulation is transformed into car coordination system as below
@@ -68,6 +108,7 @@ const double y0 = 0;
 const double psi0 = 0;
 const double cte0 = coeffs[0];
 const double epsi0 = -atan(coeffs[1]);
+const double psides0 = atan(3 * coeffs[3] * x0 * x0 + 2 * coeffs[2] * x0 + coeffs[1]);
 
 /* State after delay.*/
 double x_delay = x0 + ( v * cos(psi0) * delay );
@@ -75,7 +116,8 @@ double y_delay = y0 + ( v * sin(psi0) * delay );
 double psi_delay = psi0 - ( v * delta * delay / mpc.Lf );
 double v_delay = v + a * delay;
 double cte_delay = cte0 + ( v * sin(epsi0) * delay );
-double epsi_delay = epsi0 - ( v * atan(coeffs[1]) * delay / mpc.Lf );
+double epsi_delay = psi0 - psides0 +  v * (delta * delay / mpc.Lf);
+
 
 /* Define the state vector.*/
 Eigen::VectorXd state(6);
@@ -84,7 +126,7 @@ state << x_delay, y_delay, psi_delay, v_delay, cte_delay, epsi_delay;
 
 ## Result
 
-With my implementation the simulation car can drive itself around the lake track safely. It can also reach a speed over 60 mph on the straight line. A short demostration video is provided [here.](https://www.youtube.com/watch?v=Y11HO5_nObw)
+With my implementation the simulation car can drive itself around the lake track safely. It can also reach a max speed of 74 mph on the straight line. A short demostration video is provided [here.](https://www.youtube.com/watch?v=Y11HO5_nObw)
 
 
  
