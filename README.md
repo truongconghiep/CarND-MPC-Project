@@ -37,9 +37,9 @@ To keep the controller stable, following cost weights are introduced in the cost
 /* MPC cost weights */
 #define CTE_COST_WEIGHT                 (double)2000
 #define EPSI_COST_WEIGHT                (double)2000
-#define DELTA_COST_WEIGHT_PROPORTIONAL  (double)30
-#define A_COST_WEIGHT_PROPORTIONAL      (double)30
-#define DELTA_COST_WEIGHT_DIFFERENT     (double)4000000
+#define DELTA_COST_WEIGHT_PROPORTIONAL  (double)35
+#define A_COST_WEIGHT_PROPORTIONAL      (double)35
+#define DELTA_COST_WEIGHT_DIFFERENT     (double)5000000
 #define A_COST_WEIGHT_DIFFERENT         (double)20000
 ```
 
