@@ -9,7 +9,7 @@ typedef CPPAD_TESTVECTOR(double) Dvector;
 
 /* We set the number of timesteps
    and the timestep evaluation frequency or evaluation period. */
-size_t N = 10;
+size_t N = 15;
 double dt = 0.1;
 
 /* This value assumes the model presented in the classroom is used.
@@ -72,15 +72,15 @@ class FG_eval
     /* Minimize the use of actuators.*/
     for (unsigned int t = 0; t < N - 1; t++) 
 	{
-      fg[0] += 50 * CppAD::pow(vars[delta_start + t], 2);
-      fg[0] += 50 * CppAD::pow(vars[a_start + t], 2);
+      fg[0] += 30 * CppAD::pow(vars[delta_start + t], 2);
+      fg[0] += 30 * CppAD::pow(vars[a_start + t], 2);
     }
 
     /* Minimize the value gap between sequential actuations.*/
     for (unsigned  int t = 0; t < N - 2; t++) 
 	{
-      fg[0] += 250000 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-      fg[0] += 5000 * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+      fg[0] += 3000000 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      fg[0] += 20000 * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
 
     /*
