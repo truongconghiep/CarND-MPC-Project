@@ -53,7 +53,7 @@ auto coeffs = polyfit(ptsx_transform, ptsy_transform, 3);
 
 ## Model Predictive Control with Latency
 
-To deal with the latency of actuation, a small delay is implemented to predict the system state after the latency, which is new initail state for MPC. The prediction of new state after latency is implemented as followed:
+To deal with the latency of actuation, a small delay is implemented to predict the system state after the latency, which is new initial state for MPC. The prediction of new state after latency is implemented as followed:
 
 ```
 /* Actuator delay in milliseconds.*/
@@ -82,7 +82,9 @@ Eigen::VectorXd state(6);
 state << x_delay, y_delay, psi_delay, v_delay, cte_delay, epsi_delay;
 ```
 
+## Result
 
+With my implementation the simulation car can drive itself around the lake track safely. It can also reach a speed over 60 mph on the straight line. A short demostration video is provided here. [here](https://www.youtube.com/watch?v=Y11HO5_nObw)
 
 
  
